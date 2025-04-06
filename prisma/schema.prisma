@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int     @id @default(autoincrement())
+  display_name    String
+  username        String  @unique
+  email           String  @unique
+  email_confirmed Boolean
+  password_hash   String
+
+  calendars UserCalendar[]
+}
+
+model Calendar {
+  id            Int     @id @default(autoincrement())
+  calendar_name String
+  color         String?
+
+  events     Event[]
+  categories Category[]
+  users      UserCalendar[]
+}
+
+model UserCalendar {
+  user_id      Int
+  calendar_id  Int
+  access_level AccessLevel
+
+  user     User     @relation(fields: [user_id], references: [id])
+  calendar Calendar @relation(fields: [calendar_id], references: [id])
+
+  @@id([user_id, calendar_id])
+}
+
+model Category {
+  id            Int     @id @default(autoincrement())
+  category_name String
+  color         String?
+  calendar_id   Int
+
+  calendar Calendar @relation(fields: [calendar_id], references: [id])
+  events   Event[]
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  event_name  String
+  start_time  DateTime
+  end_time    DateTime
+  color       String?
+  calendar_id Int
+  category_id Int?
+
+  calendar Calendar  @relation(fields: [calendar_id], references: [id])
+  category Category? @relation(fields: [category_id], references: [id])
+}
+
+enum AccessLevel {
+  owner
+  admin
+  member
+}
