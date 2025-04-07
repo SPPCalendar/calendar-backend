@@ -3,12 +3,27 @@ import { PrismaClient } from '../generated/prisma'
 const prisma = new PrismaClient()
 
 export const getAllUsers = () => {
-  return prisma.user.findMany()
+  return prisma.user.findMany({
+    include: {
+      calendars: {
+        include: {
+          calendar: true,
+        },
+      },
+    },
+  })
 }
 
 export const getUserById = (id: number) => {
   return prisma.user.findUnique({
     where: { id },
+    include: {
+      calendars: {
+        include: {
+          calendar: true,
+        },
+      },
+    },
   })
 }
 
