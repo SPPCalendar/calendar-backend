@@ -1,4 +1,4 @@
-import { PrismaClient, AccessLevel } from '../generated/prisma'
+import { PrismaClient, AccessLevel } from '@prisma/client'
 
 const prisma = new PrismaClient()
 

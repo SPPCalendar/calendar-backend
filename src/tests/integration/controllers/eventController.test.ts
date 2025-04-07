@@ -1,27 +1,24 @@
 import request from 'supertest'
 import { describe, it, expect, afterAll, afterEach } from 'vitest'
 import express from 'express'
-import eventRoutes from '../../../routes/eventRoutes'
-import { PrismaClient } from '../../../generated/prisma'
-import { createTestCalendar, createTestEvent } from '../utils/testData'
+import eventRoutes from '../../../routes/eventRoutes.js'
+import { prisma } from '../setup.js'
+import { createTestCalendar, createTestEvent } from '../utils/testData.js'
 
 const app = express()
 app.use(express.json())
 app.use('/api/events', eventRoutes)
 
-const prisma = new PrismaClient()
-
-
-afterEach(async () => {
-  await prisma.event.deleteMany()
-  await prisma.calendar.deleteMany()
-})
-
-afterAll(async () => {
-  await prisma.$disconnect()
-})
 
 describe('Event Controller', () => {
+  afterEach(async () => {
+    await prisma.event.deleteMany()
+    await prisma.calendar.deleteMany()
+  })
+  
+  afterAll(async () => {
+    await prisma.$disconnect()
+  })
   it('should return 200 and empty list of events initially', async () => {
     const res = await request(app).get('/api/events')
     expect(res.status).toBe(200)

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import * as EventService from '../services/eventService'
+import * as EventService from '../services/eventService.js'
 
 export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
   const { start_time, end_time } = req.query

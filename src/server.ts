@@ -2,10 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 
-import eventRoutes from './routes/eventRoutes'
-import calendarRoutes from './routes/calendarRoutes'
-import userRoutes from './routes/userRoutes'
-import categoryRoutes from './routes/categoryRoutes'
+import eventRoutes from './routes/eventRoutes.js'
+import calendarRoutes from './routes/calendarRoutes.js'
+import userRoutes from './routes/userRoutes.js'
+import categoryRoutes from './routes/categoryRoutes.js'
 
 dotenv.config()
 const app = express()

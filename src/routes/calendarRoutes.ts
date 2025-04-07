@@ -5,7 +5,7 @@ import {
   createCalendar,
   updateCalendar,
   deleteCalendar,
-} from '../controllers/calendarController'
+} from '../controllers/calendarController.js'
 
 const router = Router()
 

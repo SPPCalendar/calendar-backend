@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import * as CalendarService from '../services/calendarService'
-import { AccessLevel } from '../generated/prisma'
+import * as CalendarService from '../services/calendarService.js'
+import { AccessLevel } from '@prisma/client'
 
 export const getAllCalendars = async (_req: Request, res: Response): Promise<void> => {
   const calendars = await CalendarService.getAllCalendars()
