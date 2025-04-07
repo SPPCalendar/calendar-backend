@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma'
+import { PrismaClient, AccessLevel } from '../generated/prisma'
 
 const prisma = new PrismaClient()
 
@@ -44,7 +44,11 @@ export const deleteCalendar = (id: number) => {
   return prisma.calendar.delete({ where: { id } })
 }
 
-export const addUserToCalendar = (user_id: number, calendar_id: number, access_level: 'owner' | 'admin' | 'member') => {
+export const addUserToCalendar = (
+  user_id: number, 
+  calendar_id: number, 
+  access_level: AccessLevel
+) => {
   return prisma.userCalendar.create({
     data: {
       user_id,
@@ -63,4 +67,22 @@ export const removeUserFromCalendar = (user_id: number, calendar_id: number) => 
       },
     },
   })
+}
+
+export const createCalendarWithUsers = async (
+  calendarData: {
+    calendar_name: string
+    color?: string
+  },
+  users: { user_id: number; access_level: AccessLevel }[]
+) => {
+  const calendar = await createCalendar(calendarData)
+
+  const userPromises = users.map(user =>
+    addUserToCalendar(user.user_id, calendar.id, user.access_level)
+  )
+
+  await Promise.all(userPromises)
+
+  return getCalendarById(calendar.id)
 }
