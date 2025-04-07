@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import * as EventService from '../services/eventService'
 
-export const getAllEvents = async (_req: Request, res: Response) => {
+export const getAllEvents = async (_req: Request, res: Response): Promise<void> => {
   const events = await EventService.getAllEvents()
   res.json(events)
 }
@@ -15,7 +15,7 @@ export const getEventById = async (req: Request, res: Response) => {
   res.json(event)
 }
 
-export const createEvent = async (req: Request, res: Response) => {
+export const createEvent = async (req: Request, res: Response): Promise<void> => {
   const { event_name, start_time, end_time, color, calendar_id, category_id } = req.body
   if (!event_name || !start_time || !end_time || !calendar_id) {
     res.status(400).json({ error: 'Missing required fields' })
@@ -37,7 +37,7 @@ export const createEvent = async (req: Request, res: Response) => {
   }
 }
 
-export const updateEvent = async (req: Request, res: Response) => {
+export const updateEvent = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params
   const {
     event_name,
@@ -64,7 +64,7 @@ export const updateEvent = async (req: Request, res: Response) => {
   }
 }
 
-export const deleteEvent = async (req: Request, res: Response) => {
+export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params
 
   try {
