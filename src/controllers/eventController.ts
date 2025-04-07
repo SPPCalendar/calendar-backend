@@ -17,16 +17,32 @@ export const getEventById = async (req: Request, res: Response) => {
 
 export const createEvent = async (req: Request, res: Response): Promise<void> => {
   const { event_name, start_time, end_time, color, calendar_id, category_id } = req.body
+  
+  // Check for missing required fields
   if (!event_name || !start_time || !end_time || !calendar_id) {
     res.status(400).json({ error: 'Missing required fields' })
     return
   }
 
+  // Parse start_time and end_time into Date objects (to UTC)
+  const startDate = new Date(start_time)
+  const endDate = new Date(end_time)
+
+  // Validate that end_time is after start_time
+  if (endDate <= startDate) {
+    res.status(400).json({ error: 'end_time must be later than start_time' })
+    return
+  }
+
+  const startDateUTC = new Date(start_time.toString())
+  const endDateUTC = new Date(end_time.toString())
+
   try {
+    // Create the event
     const event = await EventService.createEvent({
       event_name,
-      start_time: new Date(start_time),
-      end_time: new Date(end_time),
+      start_time: startDateUTC,
+      end_time: endDateUTC,
       color,
       calendar_id,
       category_id,
