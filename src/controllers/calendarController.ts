@@ -60,7 +60,14 @@ export const createCalendar = async (req: Request, res: Response): Promise<void>
     const newCalendar = await CalendarService.createCalendarWithUsers(calendar_data, users)
     res.status(201).json(newCalendar)
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create calendar', details: err })
+    console.error('Error creating calendar:', err) // for logs
+
+    const message = err instanceof Error ? err.message : String(err)
+
+    res.status(500).json({
+      error: 'Failed to create calendar',
+      details: message,
+    })
   }
 }
 

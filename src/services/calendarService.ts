@@ -1,4 +1,5 @@
 import { PrismaClient, AccessLevel } from '@prisma/client'
+import { getUserById } from './userService.js'
 
 const prisma = new PrismaClient()
 
@@ -76,6 +77,19 @@ export const createCalendarWithUsers = async (
   },
   users: { user_id: number; access_level: AccessLevel }[]
 ) => {
+   // Check if all users exist
+   const userChecks = await Promise.all(
+    users.map(user => getUserById(user.user_id))
+  )
+  const nonExistentUsers = userChecks
+    .map((user, idx) => ({ exists: !!user, id: users[idx].user_id }))
+    .filter(u => !u.exists)
+
+  if (nonExistentUsers.length > 0) {
+    throw new Error(`The following user id(s) do not exist: ${nonExistentUsers.map(u => u.id).join(', ')}`)
+  }
+
+  // Create the calendar
   const calendar = await createCalendar(calendarData)
 
   const userPromises = users.map(user =>
