@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import eventRoutes from './routes/eventRoutes'
 import calendarRoutes from './routes/calendarRoutes'
 import userRoutes from './routes/userRoutes'
+import categoryRoutes from './routes/categoryRoutes'
 
 dotenv.config()
 const app = express()
@@ -15,6 +16,7 @@ app.use(express.json())
 app.use('/api/events', eventRoutes)
 app.use('/api/calendars', calendarRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/categories', categoryRoutes)
 
 const PORT = process.env.PORT || 4000
 app.listen(PORT, () => {
