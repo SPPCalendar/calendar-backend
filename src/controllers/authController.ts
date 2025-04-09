@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { createUser, getUserByEmail, getUserByUsername } from '../services/userService.js'
 import { saveRefreshToken, deleteRefreshToken, isRefreshTokenValid } from '../services/tokenService.js'
+import { UserRole } from '@prisma/client'
 import ms from 'ms'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
@@ -12,9 +13,9 @@ const ACCESS_TOKEN_EXPIRES_IN = '15m'
 const REFRESH_TOKEN_EXPIRES_IN = '7d'
 
 // Token generation
-const generateTokens = async (userId: number) => {
-  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN })
-  const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN })
+const generateTokens = async (userId: number, userRole: UserRole) => {
+  const accessToken = jwt.sign({ userId, userRole }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN })
+  const refreshToken = jwt.sign({ userId, userRole }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN })
 
   const expiresAt = new Date(Date.now() + ms(REFRESH_TOKEN_EXPIRES_IN))
   await saveRefreshToken(userId, refreshToken, expiresAt)
@@ -48,7 +49,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       email_confirmed: false,
     })
 
-    const tokens = await generateTokens(user.id)
+    const tokens = await generateTokens(user.id, user.role)
 
     res.status(201).json({ userId: user.id, ...tokens })
   } catch (err) {
@@ -78,7 +79,7 @@ export const login = async (req: Request, res: Response): Promise<void>  => {
       return
     }
 
-    const tokens = await generateTokens(user.id)
+    const tokens = await generateTokens(user.id, user.role)
     res.json({ ...tokens })
   } catch (err) {
     res.status(500).json({ message: 'Login failed', error: err })
@@ -100,10 +101,13 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: number }
+    const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { 
+      userId: number
+      userRole: UserRole 
+    }
 
     await deleteRefreshToken(refreshToken)
-    const tokens = await generateTokens(payload.userId)
+    const tokens = await generateTokens(payload.userId, payload.userRole)
     res.json( { ...tokens })
   } catch {
     res.status(401).json({ message: 'Invalid or expired refresh token' })

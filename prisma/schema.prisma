@@ -20,9 +20,15 @@ model User {
   email           String  @unique
   email_confirmed Boolean
   password_hash   String
+  role UserRole @default(USER)
 
   calendars     UserCalendar[]
   refreshTokens RefreshToken[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Calendar {

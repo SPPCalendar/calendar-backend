@@ -1,3 +1,4 @@
+import { UserRole } from '@prisma/client'
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
@@ -12,7 +13,10 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
   const token = authHeader.split(' ')[1]
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number }
+    const decoded = jwt.verify(token, JWT_SECRET) as { 
+      userId: number
+      role: UserRole
+    }
     req.user = decoded
     next()
   } catch {
