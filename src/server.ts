@@ -6,6 +6,7 @@ import eventRoutes from './routes/eventRoutes.js'
 import calendarRoutes from './routes/calendarRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import categoryRoutes from './routes/categoryRoutes.js'
+import authRoutes from './routes/authRoutes.js'
 
 dotenv.config()
 const app = express()
@@ -17,6 +18,7 @@ app.use('/api/events', eventRoutes)
 app.use('/api/calendars', calendarRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/categories', categoryRoutes)
+app.use('/api/auth', authRoutes)
 
 const PORT = process.env.PORT || 4000
 app.listen(PORT, () => {
