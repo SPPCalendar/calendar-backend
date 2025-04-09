@@ -20,33 +20,6 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
   res.json(user)
 }
 
-export const createUser = async (req: Request, res: Response): Promise<void> => {
-  const { display_name, username, email, password_hash, email_confirmed } = req.body
-
-  if (!display_name || !username || !email || !password_hash) {
-    res.status(400).json({ error: 'Missing required fields' })
-    return
-  }
-
-  try {
-    const newUser = await UserService.createUser({
-      display_name,
-      username,
-      email,
-      password_hash,
-      email_confirmed,
-    })
-
-    res.status(201).json(newUser)
-  } catch (err: any) {
-    if (err.code === 'P2002') {
-      res.status(409).json({ error: 'Email or username already in use' })
-    } else {
-      res.status(500).json({ error: 'Failed to create user', details: err })
-    }
-  }
-}
-
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params
   const data = req.body
