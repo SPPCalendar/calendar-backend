@@ -28,4 +28,8 @@ export default defineConfig([globalIgnores(["**/node_modules", "**/dist", "**/ge
     languageOptions: {
         parser: tsParser,
     },
+
+    rules: {
+        "@typescript-eslint/no-floating-promises": "warning",
+      },
 }]);

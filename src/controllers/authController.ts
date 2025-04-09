@@ -2,6 +2,8 @@ import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { createUser, getUserByEmail, getUserByUsername } from '../services/userService.js'
+import { saveRefreshToken, deleteRefreshToken, isRefreshTokenValid } from '../services/tokenService.js'
+import ms from 'ms'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'refreshsecret'
@@ -10,9 +12,13 @@ const ACCESS_TOKEN_EXPIRES_IN = '15m'
 const REFRESH_TOKEN_EXPIRES_IN = '7d'
 
 // Token generation
-const generateTokens = (userId: number) => {
+const generateTokens = async (userId: number) => {
   const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN })
   const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN })
+
+  const expiresAt = new Date(Date.now() + ms(REFRESH_TOKEN_EXPIRES_IN))
+  await saveRefreshToken(userId, refreshToken, expiresAt)
+
   return { accessToken, refreshToken }
 }
 
@@ -42,7 +48,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       email_confirmed: false,
     })
 
-    const tokens = generateTokens(user.id)
+    const tokens = await generateTokens(user.id)
 
     res.status(201).json({ userId: user.id, ...tokens })
   } catch (err) {
@@ -72,15 +78,15 @@ export const login = async (req: Request, res: Response): Promise<void>  => {
       return
     }
 
-    const tokens = generateTokens(user.id)
-    res.json({ userId: user.id, ...tokens })
+    const tokens = await generateTokens(user.id)
+    res.json({ ...tokens })
   } catch (err) {
     res.status(500).json({ message: 'Login failed', error: err })
   }
 }
 
 // POST /refresh
-export const refresh = (req: Request, res: Response): void => {
+export const refresh = async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body
     if (!refreshToken) {
@@ -88,19 +94,30 @@ export const refresh = (req: Request, res: Response): void => {
       return
     }
 
-    const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: number }
-    const tokens = generateTokens(payload.userId)
+    const isValid = await isRefreshTokenValid(refreshToken)
+    if (!isValid) {
+      res.status(401).json({ message: 'Invalid refresh token' })
+      return
+    }
 
-    res.json( { userId: payload.userId, ...tokens })
+    const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: number }
+
+    await deleteRefreshToken(refreshToken)
+    const tokens = await generateTokens(payload.userId)
+    res.json( { ...tokens })
   } catch {
     res.status(401).json({ message: 'Invalid or expired refresh token' })
   }
 }
 
-export const logout = async (req: Request, res: Response) => {
+// POST /logout
+export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body
-    if (!refreshToken) return res.status(400).json({ message: 'No refresh token' })
+    if (!refreshToken) {
+      res.status(400).json({ message: 'No refresh token' })
+      return
+    }
 
     await deleteRefreshToken(refreshToken)
     res.status(200).json({ message: 'Logged out successfully' })

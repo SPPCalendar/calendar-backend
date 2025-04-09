@@ -22,6 +22,7 @@ model User {
   password_hash   String
 
   calendars UserCalendar[]
+  refreshTokens RefreshToken[]
 }
 
 model Calendar {
@@ -72,4 +73,14 @@ enum AccessLevel {
   owner
   admin
   member
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  
+  user      User     @relation(fields: [userId], references: [id])
 }
