@@ -14,22 +14,31 @@ const compat = new FlatCompat({
     allConfig: js.configs.all
 });
 
-export default defineConfig([globalIgnores(["**/node_modules", "**/dist", "**/generated"]), {
-    extends: compat.extends(
-        "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended",
-    ),
+export default defineConfig([
+    globalIgnores(["**/node_modules", "**/dist", "**/generated"]),
 
-    plugins: {
-        "@typescript-eslint": typescriptEslint,
-    },
+    {
+        files: ['src/**/*.ts'],
+        extends: compat.extends(
+            "eslint:recommended",
+            "plugin:@typescript-eslint/eslint-recommended",
+            "plugin:@typescript-eslint/recommended",
+        ),
 
-    languageOptions: {
-        parser: tsParser,
-    },
+        plugins: {
+            "@typescript-eslint": typescriptEslint,
+        },
 
-    rules: {
-        "@typescript-eslint/no-floating-promises": "warning",
-      },
-}]);
+        languageOptions: {
+            parser: tsParser,
+            parserOptions: {
+                project: './tsconfig.json',
+            },
+        },
+
+        rules: {
+            "@typescript-eslint/no-misused-promises": "error",
+            "@typescript-eslint/no-floating-promises": "error",
+        },
+    }
+]);

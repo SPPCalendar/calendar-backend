@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { Request, Response } from 'express'
 import * as UserService from '../services/userService.js'
 

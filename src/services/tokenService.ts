@@ -17,7 +17,7 @@ export const deleteRefreshToken = async (token: string) => {
   })
 }
 
-export const isRefreshTokenValid = async (token: string) => {
+export const isRefreshTokenValid = async (token: string): Promise<boolean> => {
   const found = await prisma.refreshToken.findUnique({
     where: { token },
   })
