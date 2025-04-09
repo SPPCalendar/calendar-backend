@@ -21,7 +21,7 @@ model User {
   email_confirmed Boolean
   password_hash   String
 
-  calendars UserCalendar[]
+  calendars     UserCalendar[]
   refreshTokens RefreshToken[]
 }
 
@@ -76,11 +76,11 @@ enum AccessLevel {
 }
 
 model RefreshToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
-  userId    Int
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-  
-  user      User     @relation(fields: [userId], references: [id])
+  id         Int      @id @default(autoincrement())
+  token_hash String   @unique
+  userId     Int
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  user User @relation(fields: [userId], references: [id])
 }
