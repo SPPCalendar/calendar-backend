@@ -1,8 +1,23 @@
 import { Request, Response } from 'express'
 import * as CalendarService from '../services/calendarService.js'
-import { AccessLevel } from '@prisma/client'
+import { AccessLevel, UserRole } from '@prisma/client'
 
-export const getAllCalendars = async (_req: Request, res: Response): Promise<void> => {
+export const getAllCalendars = async (req: Request, res: Response): Promise<void> => {
+  // this operation should be allowed only for an admin
+
+  // Validate that the user is authenticated
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  // Validate that the user is an admin
+  if (req.user?.userRole !== UserRole.ADMIN) {
+    res.status(403).json({ error: 'Forbidden' })
+    return
+  }
+  
+  // Validate that the user is authenticated
   const calendars = await CalendarService.getAllCalendars()
   res.json(calendars)
 }
@@ -10,9 +25,24 @@ export const getAllCalendars = async (_req: Request, res: Response): Promise<voi
 export const getCalendarById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params
   const calendar = await CalendarService.getCalendarById(Number(id))
+  
+  // Validate that the user is authenticated
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
 
+  // Validate that the calendar exists
   if (!calendar) {
     res.status(404).json({ error: 'Calendar not found' })
+    return
+  }
+
+  // Validate that the authenticated user is included in the calendar's users or user is an admin
+  const isUserIncluded = calendar.users.some(user => user.user_id === Number(req.user?.userId))
+  const isUserAdmin = req.user?.userRole === UserRole.ADMIN
+  if (!isUserIncluded && !isUserAdmin) {
+    res.status(403).json({ error: 'Forbidden' })
     return
   }
 
@@ -21,6 +51,12 @@ export const getCalendarById = async (req: Request, res: Response): Promise<void
 
 export const createCalendar = async (req: Request, res: Response): Promise<void> => {
   const { calendar_name, color, users } = req.body
+
+  // Validate that the user is authenticated
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
 
   // Validate that the calendar has a name
   if (!calendar_name) {
@@ -75,6 +111,27 @@ export const updateCalendar = async (req: Request, res: Response): Promise<void>
   const { id } = req.params
   const { calendar_name, color } = req.body
 
+  // Validate that the user is authenticated
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  // Validate that the calendar exists
+  const calendar = await CalendarService.getCalendarById(Number(id))
+  if (!calendar) {
+    res.status(404).json({ error: 'Calendar not found' })
+    return
+  }
+
+  // Validate that the authenticated user is included in the calendar's users or user is an admin
+  const isUserIncluded = calendar.users.some(user => user.user_id === Number(req.user?.userId))
+  const isUserAdmin = req.user?.userRole === UserRole.ADMIN
+  if (!isUserIncluded && !isUserAdmin) {
+    res.status(403).json({ error: 'Forbidden' })
+    return
+  }
+
   try {
     const updated = await CalendarService.updateCalendar(Number(id), { calendar_name, color })
     res.json(updated)
@@ -85,6 +142,28 @@ export const updateCalendar = async (req: Request, res: Response): Promise<void>
 
 export const deleteCalendar = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params
+
+  // Validate that the user is authenticated
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  // Validate that the calendar exists
+  const calendar = await CalendarService.getCalendarById(Number(id))
+  if (!calendar) {
+    res.status(404).json({ error: 'Calendar not found' })
+    return
+  }
+
+  // Validate that the authenticated user is included in the calendar's users or user is an admin
+  const isUserIncluded = calendar.users.some(user => user.user_id === Number(req.user?.userId))
+  const isUserAdmin = req.user?.userRole === UserRole.ADMIN
+  if (!isUserIncluded && !isUserAdmin) {
+    res.status(403).json({ error: 'Forbidden' })
+    return
+  }
+
 
   try {
     await CalendarService.deleteCalendar(Number(id))

@@ -9,7 +9,7 @@ import ms from 'ms'
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'refreshsecret'
 const PASSWORD_SALT_ROUNDS = process.env.PASSWORD_SALT_ROUNDS ? parseInt(process.env.PASSWORD_SALT_ROUNDS) : 10
-const ACCESS_TOKEN_EXPIRES_IN = '15m'
+const ACCESS_TOKEN_EXPIRES_IN = '1h'
 const REFRESH_TOKEN_EXPIRES_IN = '7d'
 
 // Token generation

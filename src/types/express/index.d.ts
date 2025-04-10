@@ -7,7 +7,7 @@ declare global {
     interface Request {
       user?: { 
         userId: number 
-        role: UserRole
+        userRole: UserRole
       }
     }
   }
