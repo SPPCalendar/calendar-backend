@@ -2,19 +2,27 @@ import { Request, Response } from 'express'
 import * as EventService from '../services/eventService.js'
 
 export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
-  const { start_time, end_time } = req.query
+  const { start_time, end_time, calendar_id } = req.query
 
+  const filters: {
+    start_time?: Date
+    end_time?: Date
+    calendar_id?: number
+  } = {}
+  
   // Convert query params to Date objects if they exist
-  const filters: { start_time?: Date; end_time?: Date } = {}
-
   if (start_time) {
     filters.start_time = new Date(start_time as string)
   }
-
+  
   if (end_time) {
     filters.end_time = new Date(end_time as string)
   }
-
+  
+  if (calendar_id) {
+    filters.calendar_id = Number(calendar_id)
+  }
+  
   const events = await EventService.getAllEvents(filters)
   
   res.json(events)

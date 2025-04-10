@@ -2,12 +2,17 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export const getAllEvents = (filters: {start_time?: Date; end_time?: Date}) => {
+export const getAllEvents = (filters: {
+  start_time?: Date
+  end_time?: Date
+  calendar_id?: number
+}) => {
   return prisma.event.findMany({
     where: {
       AND: [
         filters.start_time ? { start_time: { gte: filters.start_time } } : {},
         filters.end_time ? { end_time: { lte: filters.end_time } } : {},
+        filters.calendar_id ? { calendar_id: filters.calendar_id } : {},
       ],
     },
     include: { calendar: true, category: true },
