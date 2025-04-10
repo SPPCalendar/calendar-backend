@@ -100,3 +100,19 @@ export const createCalendarWithUsers = async (
 
   return getCalendarById(calendar.id)
 }
+
+export const getCalendarsForUser = (userId: number) => {
+  return prisma.calendar.findMany({
+    where: {
+      users: {
+        some: {
+          user_id: userId,
+        },
+      },
+    },
+    include: {
+      users: true,
+      categories: true,
+    },
+  })
+}

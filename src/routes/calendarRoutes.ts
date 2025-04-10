@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   getAllCalendars,
+  getMyCalendars,
   getCalendarById,
   createCalendar,
   updateCalendar,
@@ -10,6 +11,7 @@ import {
 const router = Router()
 
 router.get('/', getAllCalendars)
+router.get('/me', getMyCalendars)
 router.get('/:id', getCalendarById)
 router.post('/', createCalendar)
 router.put('/:id', updateCalendar)

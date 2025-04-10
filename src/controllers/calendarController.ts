@@ -22,6 +22,18 @@ export const getAllCalendars = async (req: Request, res: Response): Promise<void
   res.json(calendars)
 }
 
+export const getMyCalendars = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  const userId = req.user.userId
+  const calendars = await CalendarService.getCalendarsForUser(userId)
+
+  res.json(calendars)
+}
+
 export const getCalendarById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params
   const calendar = await CalendarService.getCalendarById(Number(id))
