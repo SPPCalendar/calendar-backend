@@ -40,19 +40,9 @@ export const getEventById = async (req: Request, res: Response) => {
 export const createEvent = async (req: Request, res: Response): Promise<void> => {
   const { event_name, start_time, end_time, color, calendar_id, category_id } = req.body
   
-  // Check for missing required fields
-  if (!event_name || !start_time || !end_time || !calendar_id) {
-    res.status(400).json({ error: 'Missing required fields' })
-    return
-  }
-
-  // Parse start_time and end_time into Date objects (to UTC)
-  const startDate = new Date(start_time)
-  const endDate = new Date(end_time)
-
-  // Validate that end_time is after start_time
-  if (endDate <= startDate) {
-    res.status(400).json({ error: 'end_time must be later than start_time' })
+  const error = validateEventInput({ event_name, start_time, end_time, calendar_id })
+  if (error) {
+    res.status(400).json({ error })
     return
   }
 
@@ -85,12 +75,21 @@ export const updateEvent = async (req: Request, res: Response): Promise<void> =>
     calendar_id,
     category_id,
   } = req.body
+  
+  const error = validateEventInput({ event_name, start_time, end_time, calendar_id })
+  if (error) {
+    res.status(400).json({ error })
+    return
+  }
+
+  const startDateUTC = new Date(start_time.toString())
+  const endDateUTC = new Date(end_time.toString())
 
   try {
     const updated = await EventService.updateEvent(Number(id), {
       event_name,
-      start_time: start_time ? new Date(start_time) : undefined,
-      end_time: end_time ? new Date(end_time) : undefined,
+      start_time: startDateUTC,
+      end_time: endDateUTC,
       color,
       calendar_id,
       category_id,
@@ -111,4 +110,30 @@ export const deleteEvent = async (req: Request, res: Response): Promise<void> =>
   } catch (err) {
     res.status(404).json({ error: 'Event not found or already deleted', details: err })
   }
+}
+
+
+const validateEventInput = ({
+  event_name,
+  start_time,
+  end_time,
+  calendar_id,
+}: {
+  event_name?: string
+  start_time?: string
+  end_time?: string
+  calendar_id?: number
+}) => {
+  if (!event_name || !start_time || !end_time || !calendar_id) {
+    return 'Missing required fields'
+  }
+
+  const startDate = new Date(start_time)
+  const endDate = new Date(end_time)
+
+  if (endDate <= startDate) {
+    return 'end_time must be later than start_time'
+  }
+
+  return null
 }
