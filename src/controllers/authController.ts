@@ -13,9 +13,9 @@ const ACCESS_TOKEN_EXPIRES_IN = '1h'
 const REFRESH_TOKEN_EXPIRES_IN = '7d'
 
 // Token generation
-const generateTokens = async (userId: number, userRole: UserRole) => {
-  const accessToken = jwt.sign({ userId, userRole }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN })
-  const refreshToken = jwt.sign({ userId, userRole }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN })
+const generateTokens = async (userId: number, username: string, userRole: UserRole) => {
+  const accessToken = jwt.sign({ userId, username, userRole }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN })
+  const refreshToken = jwt.sign({ userId, username, userRole }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN })
 
   const expiresAt = new Date(Date.now() + ms(REFRESH_TOKEN_EXPIRES_IN))
   await saveRefreshToken(userId, refreshToken, expiresAt)
@@ -49,7 +49,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       email_confirmed: false,
     })
 
-    const tokens = await generateTokens(user.id, user.role)
+    const tokens = await generateTokens(user.id, user.username, user.role)
 
     res.status(201).json({ userId: user.id, ...tokens })
   } catch (err) {
@@ -79,7 +79,7 @@ export const login = async (req: Request, res: Response): Promise<void>  => {
       return
     }
 
-    const tokens = await generateTokens(user.id, user.role)
+    const tokens = await generateTokens(user.id, user.username, user.role)
     res.json({ ...tokens })
   } catch (err) {
     res.status(500).json({ message: 'Login failed', error: err })
@@ -103,11 +103,12 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
     const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { 
       userId: number
+      username: string
       userRole: UserRole 
     }
 
     await deleteRefreshToken(refreshToken)
-    const tokens = await generateTokens(payload.userId, payload.userRole)
+    const tokens = await generateTokens(payload.userId, payload.username, payload.userRole)
     res.json( { ...tokens })
   } catch {
     res.status(401).json({ message: 'Invalid or expired refresh token' })
