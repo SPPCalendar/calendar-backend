@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import * as CalendarService from '../services/calendarService.js'
 import { AccessLevel, UserRole } from '@prisma/client'
+import { getUserByUsername } from '../services/userService.js'
 
 export const getAllCalendars = async (req: Request, res: Response): Promise<void> => {
   // this operation should be allowed only for an admin
@@ -104,8 +105,22 @@ export const createCalendar = async (req: Request, res: Response): Promise<void>
 
   try {
     const calendar_data = { calendar_name, color }
+    
+    const resolvedUsers = await Promise.all(
+      users.map(async (u) => {
+        const user = await getUserByUsername(u.username)
+        if (!user) {
+          throw new Error(`User "${u.username}" not found`)
+        }
+
+        return {
+          user_id: user.id,
+          access_level: u.access_level,
+        }
+      })
+    )
     // Create the calendar and add users to it
-    const newCalendar = await CalendarService.createCalendarWithUsers(calendar_data, users)
+    const newCalendar = await CalendarService.createCalendarWithUsers(calendar_data, resolvedUsers)
     res.status(201).json(newCalendar)
   } catch (err) {
     console.error('Error creating calendar:', err) // for logs
