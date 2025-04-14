@@ -196,6 +196,7 @@ export const deleteCalendar = async (req: Request, res: Response): Promise<void>
     await CalendarService.deleteCalendar(Number(id))
     res.status(204).send()
   } catch (err) {
+    console.error('Error deleting calendar:', err) // for logs
     res.status(404).json({ error: 'Calendar not found', details: err })
   }
 }

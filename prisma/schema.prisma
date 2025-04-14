@@ -47,7 +47,7 @@ model UserCalendar {
   access_level AccessLevel
 
   user     User     @relation(fields: [user_id], references: [id])
-  calendar Calendar @relation(fields: [calendar_id], references: [id])
+  calendar Calendar @relation(fields: [calendar_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, calendar_id])
 }
@@ -71,8 +71,8 @@ model Event {
   calendar_id Int
   category_id Int?
 
-  calendar Calendar  @relation(fields: [calendar_id], references: [id])
-  category Category? @relation(fields: [category_id], references: [id])
+  calendar Calendar  @relation(fields: [calendar_id], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [category_id], references: [id], onDelete: Cascade)
 }
 
 enum AccessLevel {
