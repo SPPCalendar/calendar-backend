@@ -32,6 +32,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'Missing required fields' })
       return
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ error: 'Invalid email format' })
+      return
+    }
     
     const existingUser = await getUserByEmail(email) || await getUserByUsername(username)
     if (existingUser) {
