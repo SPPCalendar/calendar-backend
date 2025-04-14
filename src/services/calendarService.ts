@@ -111,7 +111,15 @@ export const getCalendarsForUser = (userId: number) => {
       },
     },
     include: {
-      users: true,
+      users: {
+        include: {
+          user: {
+            select: {
+              username: true,
+            }
+          },
+        }
+      },
       categories: true,
     },
   })
