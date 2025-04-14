@@ -30,6 +30,7 @@ export const getEventById = (id: number) => {
 
 export const createEvent = (data: {
   event_name: string
+  description: string
   start_time: Date
   end_time: Date
   color?: string

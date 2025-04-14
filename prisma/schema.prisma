@@ -65,6 +65,7 @@ model Category {
 model Event {
   id          Int      @id @default(autoincrement())
   event_name  String
+  description String?
   start_time  DateTime
   end_time    DateTime
   color       String?

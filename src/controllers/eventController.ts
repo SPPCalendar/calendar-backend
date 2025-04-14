@@ -32,7 +32,7 @@ export const getEventById = async (req: Request, res: Response) => {
 }
 
 export const createEvent = async (req: Request, res: Response): Promise<void> => {
-  const { event_name, start_time, end_time, color, calendar_id, category_id } = req.body
+  const { event_name, description, start_time, end_time, color, calendar_id, category_id } = req.body
   
   const error = validateEventInput({ event_name, start_time, end_time, calendar_id })
   if (error) {
@@ -47,6 +47,7 @@ export const createEvent = async (req: Request, res: Response): Promise<void> =>
     // Create the event
     const event = await EventService.createEvent({
       event_name,
+      description,
       start_time: startDateUTC,
       end_time: endDateUTC,
       color,
@@ -63,6 +64,7 @@ export const updateEvent = async (req: Request, res: Response): Promise<void> =>
   const { id } = req.params
   const {
     event_name,
+    description,
     start_time,
     end_time,
     color,
@@ -82,6 +84,7 @@ export const updateEvent = async (req: Request, res: Response): Promise<void> =>
   try {
     const updated = await EventService.updateEvent(Number(id), {
       event_name,
+      description,
       start_time: startDateUTC,
       end_time: endDateUTC,
       color,
