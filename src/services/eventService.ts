@@ -6,6 +6,7 @@ export const getAllEvents = (filters: {
   start_time?: Date
   end_time?: Date
   calendar_id?: number
+  event_name?: string
 }) => {
   return prisma.event.findMany({
     where: {
@@ -13,6 +14,7 @@ export const getAllEvents = (filters: {
         filters.start_time ? { start_time: { gte: filters.start_time } } : {},
         filters.end_time ? { end_time: { lte: filters.end_time } } : {},
         filters.calendar_id ? { calendar_id: filters.calendar_id } : {},
+        filters.event_name ? { event_name: { contains: filters.event_name, mode: 'insensitive' } } : {},
       ],
     },
     include: { calendar: true, category: true },
