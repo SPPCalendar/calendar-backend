@@ -2,7 +2,7 @@ import { Request } from 'express'
 import jwt from 'jsonwebtoken'
 import { PubSub } from 'graphql-subscriptions'
 
-export const pubsub = new PubSub() // Shared instance
+export const pubsub = new PubSub()
 
 export interface Context {
   user: { userId: number; userRole: string } | null

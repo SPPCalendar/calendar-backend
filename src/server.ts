@@ -10,27 +10,69 @@ import authRoutes from './routes/authRoutes.js'
 
 import { verifyToken } from './middleware/authMiddleware.js'
 import { expressMiddleware } from '@apollo/server/express4'
-import { server } from './graphql/index.js'
 
 import { buildContext } from './graphql/context.js'
+
+
+import { createServer } from 'http';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/use/ws';
+
+
+import { ApolloServer } from '@apollo/server'
+import { schema } from "./graphql/schema/index.js"
+
 
 dotenv.config()
 const app = express()
 
-app.use(cors())
-app.use(express.json())
+// app.use(cors())
+// app.use(express.json())
 
-app.use('/api/events', eventRoutes)
-app.use('/api/calendars', verifyToken, calendarRoutes)
-app.use('/api/users', userRoutes)
-app.use('/api/categories', categoryRoutes)
-app.use('/api/auth', authRoutes)
+// app.use('/api/events', eventRoutes)
+// app.use('/api/calendars', verifyToken, calendarRoutes)
+// app.use('/api/users', userRoutes)
+// app.use('/api/categories', categoryRoutes)
+// app.use('/api/auth', authRoutes)
 
+// This `app` is the returned value from `express()`.
+const httpServer = createServer(app);
 
-const PORT = process.env.PORT || 4000
+// Creating the WebSocket server
+const wsServer = new WebSocketServer({
+  // This is the `httpServer` we created in a previous step.
+  server: httpServer,
+  // Pass a different path here if app.use
+  // serves expressMiddleware at a different path
+  path: '/subscriptions',
+});
 
+const serverCleanup = useServer({ schema }, wsServer);
+// await apolloServer.start();
+
+const server = new ApolloServer({
+  schema,
+  plugins: [
+    // Proper shutdown for the HTTP server.
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+
+    // Proper shutdown for the WebSocket server.
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose();
+          },
+        };
+      },
+    },
+  ],
+});
+
+await server.start();
 app.use(
-  '/graphql/',
+  '/graphql',
   cors<cors.CorsRequest>(),
   express.json(), 
   expressMiddleware(server, {
@@ -38,6 +80,7 @@ app.use(
   }),
 );
 
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 4000
+httpServer.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`)
 })

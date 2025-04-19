@@ -2,6 +2,7 @@ import { objectType, queryType, mutationType, intArg, stringArg, nonNull, arg, e
 import * as EventService from '../../services/eventService.js'
 
 import { subscriptionField } from 'nexus'
+import { PubSub } from 'graphql-subscriptions'
 
 const EVENT_CREATED = 'EVENT_CREATED'
 
@@ -64,7 +65,7 @@ export const EventMutation = extendType({
             end_time: new Date(args.end_time),
           })
         
-          await ctx.pubsub.publish(EVENT_CREATED, newEvent)
+          ctx.pubsub.publish(EVENT_CREATED, newEvent)
         
           return newEvent
       },
@@ -75,6 +76,7 @@ export const EventMutation = extendType({
 export const EventSubscription = subscriptionField('eventCreated', {
   type: 'Event',
   subscribe: (_, __, ctx) => {
+    console.log('subscribed')
     return ctx.pubsub.asyncIterator(EVENT_CREATED)
   },
   resolve: (payload) => {
