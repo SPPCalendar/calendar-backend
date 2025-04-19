@@ -77,7 +77,7 @@ export const EventSubscription = subscriptionField('eventCreated', {
   type: 'Event',
   subscribe: (_, __, ctx) => {
     console.log('subscribed')
-    return ctx.pubsub.asyncIterator(EVENT_CREATED)
+    return ctx.pubsub.asyncIterableIterator(EVENT_CREATED)
   },
   resolve: (payload) => {
     return payload

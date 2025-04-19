@@ -12,6 +12,7 @@ import { verifyToken } from './middleware/authMiddleware.js'
 import { expressMiddleware } from '@apollo/server/express4'
 
 import { buildContext } from './graphql/context.js'
+import { pubsub } from './graphql/context.js'
 
 
 import { createServer } from 'http';
@@ -48,7 +49,14 @@ const wsServer = new WebSocketServer({
   path: '/subscriptions',
 });
 
-const serverCleanup = useServer({ schema }, wsServer);
+const serverCleanup = useServer({ 
+    schema, 
+    context: {
+      pubsub
+    }
+  }, 
+  wsServer
+);
 // await apolloServer.start();
 
 const server = new ApolloServer({
