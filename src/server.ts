@@ -9,6 +9,10 @@ import categoryRoutes from './routes/categoryRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 
 import { verifyToken } from './middleware/authMiddleware.js'
+import { expressMiddleware } from '@apollo/server/express4'
+import { server } from './graphql/index.js'
+
+import { buildContext } from './graphql/context.js'
 
 dotenv.config()
 const app = express()
@@ -22,7 +26,18 @@ app.use('/api/users', userRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/auth', authRoutes)
 
+
 const PORT = process.env.PORT || 4000
+
+app.use(
+  '/graphql/',
+  cors<cors.CorsRequest>(),
+  express.json(), 
+  expressMiddleware(server, {
+    context: async ({ req }) => buildContext({ req }),
+  }),
+);
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`)
 })

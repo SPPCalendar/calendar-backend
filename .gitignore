@@ -2,7 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,node
 
 ### Prisma ###
-**/generated/prisma/
+**/generated
 
 ### Node ###
 # Logs
