@@ -46,7 +46,7 @@ model UserCalendar {
   calendar_id  Int
   access_level AccessLevel
 
-  user     User     @relation(fields: [user_id], references: [id])
+  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   calendar Calendar @relation(fields: [calendar_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, calendar_id])
