@@ -24,18 +24,20 @@ import { useServer } from 'graphql-ws/use/ws';
 import { ApolloServer } from '@apollo/server'
 import { schema } from "./graphql/schema/index.js"
 
+import jwt from 'jsonwebtoken'
+
 
 dotenv.config()
 const app = express()
 
-// app.use(cors())
-// app.use(express.json())
+app.use(cors())
+app.use(express.json())
 
-// app.use('/api/events', eventRoutes)
-// app.use('/api/calendars', verifyToken, calendarRoutes)
-// app.use('/api/users', userRoutes)
-// app.use('/api/categories', categoryRoutes)
-// app.use('/api/auth', authRoutes)
+app.use('/api/events', eventRoutes)
+app.use('/api/calendars', verifyToken, calendarRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/categories', categoryRoutes)
+app.use('/api/auth', authRoutes)
 
 // This `app` is the returned value from `express()`.
 const httpServer = createServer(app);
@@ -49,14 +51,23 @@ const wsServer = new WebSocketServer({
   path: '/subscriptions',
 });
 
-const serverCleanup = useServer({ 
-    schema, 
-    context: {
-      pubsub
+const serverCleanup = useServer({
+  schema,
+  context: async (ctx) => {
+    const token = ctx.connectionParams?.authorization?.replace('Bearer ', '')
+    let user = null
+
+    if (token) {
+      try {
+        user = jwt.verify(token, process.env.JWT_SECRET!)
+      } catch {
+        console.warn('Invalid WS token')
+      }
     }
-  }, 
-  wsServer
-);
+
+    return { user, pubsub }
+  }
+}, wsServer)
 // await apolloServer.start();
 
 const server = new ApolloServer({
