@@ -30,6 +30,31 @@ export const getAllEvents = (
   })
 }
 
+export const countEvents = (filters: {
+  start_time?: Date
+  end_time?: Date
+  calendar_id?: number
+  event_name?: string
+}) => {
+  return prisma.event.count({
+    where: {
+      AND: [
+        filters.start_time ? { start_time: { gte: filters.start_time } } : {},
+        filters.end_time ? { end_time: { lte: filters.end_time } } : {},
+        filters.calendar_id ? { calendar_id: filters.calendar_id } : {},
+        filters.event_name
+          ? {
+              event_name: {
+                contains: filters.event_name,
+                mode: 'insensitive',
+              },
+            }
+          : {},
+      ],
+    },
+  })
+}
+
 export const getEventById = (id: number) => {
   return prisma.event.findUnique({
     where: { id },

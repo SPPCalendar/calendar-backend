@@ -39,11 +39,17 @@ export const getAllEvents = async (req: Request, res: Response): Promise<void> =
   }
   
   try {
-    const events = await EventService.getAllEvents(filters, pagination)
+    const [events, totalCount] = await Promise.all([
+      EventService.getAllEvents(filters, pagination),
+      EventService.countEvents(filters),
+    ])
 
     res.json({
       data: events,
-      pagination,
+      pagination: {
+        ...pagination,
+        totalCount,
+      },
     })
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch events', details: err })
