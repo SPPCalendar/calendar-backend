@@ -136,7 +136,7 @@ export const createCalendar = async (req: Request, res: Response): Promise<void>
 
 export const updateCalendar = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params
-  const { calendar_name, color } = req.body
+  const { calendar_name, color, users } = req.body
 
   // Validate that the user is authenticated
   if (!req.user) {
@@ -160,8 +160,14 @@ export const updateCalendar = async (req: Request, res: Response): Promise<void>
   }
 
   try {
-    const updated = await CalendarService.updateCalendar(Number(id), { calendar_name, color })
-    res.json(updated)
+    await CalendarService.updateCalendar(Number(id), { calendar_name, color })
+
+    if (Array.isArray(users)) {
+      await CalendarService.updateCalendarUsers(Number(id), users);
+    }
+
+    const fullCalendar = await CalendarService.getCalendarById(Number(id));
+    res.json(fullCalendar);
   } catch (err) {
     res.status(400).json({ error: 'Failed to update calendar', details: err })
   }

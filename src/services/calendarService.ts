@@ -1,5 +1,5 @@
 import { PrismaClient, AccessLevel } from '@prisma/client'
-import { getUserById } from './userService.js'
+import { getUserById, getUserByUsername } from './userService.js'
 
 const prisma = new PrismaClient()
 
@@ -57,6 +57,63 @@ export const addUserToCalendar = (
       access_level,
     },
   })
+}
+
+export const updateCalendarUsers = async (
+  calendar_id: number,
+  updatedUsers: { username: string; access_level: AccessLevel }[]
+) => {
+  // 1. Fetch current user associations
+  const existingUserCalendars = await prisma.userCalendar.findMany({
+    where: { calendar_id },
+    include: { user: true },
+  });
+
+  const existingUserMap = new Map(
+    existingUserCalendars.map(uc => [uc.user.username, uc])
+  );
+
+  // 2. Fetch all users to get their IDs
+  const resolvedUsers = await Promise.all(
+    updatedUsers.map(async (u) => {
+      const user = await getUserByUsername(u.username);
+      if (!user) {
+        throw new Error(`User "${u.username}" not found`);
+      }
+      return {
+        user_id: user.id,
+        access_level: u.access_level,
+        username: u.username,
+      };
+    })
+  );
+
+  const updatedUsernames = new Set(resolvedUsers.map(u => u.username));
+
+  // 3. Add or update users
+  for (const user of resolvedUsers) {
+    const existing = existingUserMap.get(user.username);
+    if (!existing) {
+      await addUserToCalendar(user.user_id, calendar_id, user.access_level);
+    } else if (existing.access_level !== user.access_level) {
+      await prisma.userCalendar.update({
+        where: {
+          user_id_calendar_id: {
+            user_id: existing.user_id,
+            calendar_id,
+          },
+        },
+        data: { access_level: user.access_level },
+      });
+    }
+  }
+
+  // 4. Remove users no longer in the list
+  for (const existing of existingUserCalendars) {
+    if (!updatedUsernames.has(existing.user.username)) {
+      await removeUserFromCalendar(existing.user_id, calendar_id);
+    }
+  }
 }
 
 export const removeUserFromCalendar = (user_id: number, calendar_id: number) => {
