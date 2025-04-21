@@ -22,6 +22,9 @@ model User {
   password_hash   String
   role UserRole @default(USER)
 
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime? @updatedAt
+
   calendars     UserCalendar[]
   refreshTokens RefreshToken[]
 }
@@ -35,6 +38,9 @@ model Calendar {
   id            Int     @id @default(autoincrement())
   calendar_name String
   color         String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime? @updatedAt
 
   events     Event[]
   categories Category[]
@@ -71,6 +77,9 @@ model Event {
   color       String?
   calendar_id Int
   category_id Int?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime? @updatedAt
 
   calendar Calendar  @relation(fields: [calendar_id], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [category_id], references: [id], onDelete: Cascade)
