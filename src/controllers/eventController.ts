@@ -5,7 +5,7 @@ import { validateEventInput } from '../utils/validation.js'
 import { UserRole } from '@prisma/client'
 
 export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
-  const { start_time, end_time, calendar_id, event_name } = req.query
+  const { start_time, end_time, calendar_id, event_name, limit, offset } = req.query
 
   // Validate that the user is authenticated
   if (!req.user) {
@@ -32,10 +32,22 @@ export const getAllEvents = async (req: Request, res: Response): Promise<void> =
   if (end_time) filters.end_time = new Date(end_time as string)
   if (calendar_id) filters.calendar_id = Number(calendar_id)
   if (event_name) filters.event_name = event_name.toString()
+
+  const pagination = {
+    limit: limit ? Number(limit) : 10,
+    offset: offset ? Number(offset) : 0,
+  }
   
-  const events = await EventService.getAllEvents(filters)
-  
-  res.json(events)
+  try {
+    const events = await EventService.getAllEvents(filters, pagination)
+
+    res.json({
+      data: events,
+      pagination,
+    })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch events', details: err })
+  }
 }
 
 export const getEventById = async (req: Request, res: Response) => {
