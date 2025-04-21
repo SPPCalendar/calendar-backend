@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -83,4 +83,20 @@ export const updateEvent = (id: number, data: Partial<Parameters<typeof createEv
 
 export const deleteEvent = (id: number) => {
   return prisma.event.delete({ where: { id } })
+}
+
+export const getEventStatsPerDay = async () => {
+  const result = await prisma.$queryRaw<Array<{ day: string; count: number }>>(Prisma.sql`
+    SELECT 
+      DATE("createdAt") AS day, 
+      COUNT(*) AS count
+    FROM "Event"
+    GROUP BY day
+    ORDER BY day ASC
+  `)
+
+  return result.map((r) => ({
+    date: r.day,
+    value: Number(r.count),
+  }))
 }

@@ -4,6 +4,28 @@ import * as CalendarService from '../services/calendarService.js'
 import { validateEventInput } from '../utils/validation.js'
 import { UserRole } from '@prisma/client'
 
+export const getEventsPerDay = async (req: Request, res: Response): Promise<void> => {
+  // Validate that the user is authenticated
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  // Validate that the user is an admin
+  if (req.user?.userRole !== UserRole.ADMIN) {
+    res.status(403).json({ error: 'Forbidden' })
+    return
+  }
+
+  try {
+    const stats = await EventService.getEventStatsPerDay()
+    res.json(stats)
+  } catch (err) {
+    console.error('Failed to get event stats:', err)
+    res.status(500).json({ error: 'Failed to fetch statistics' })
+  }
+}
+
 export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
   const { start_time, end_time, calendar_id, event_name, limit, offset } = req.query
 
