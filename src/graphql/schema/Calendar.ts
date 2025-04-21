@@ -8,10 +8,18 @@ import {
   list,
   inputObjectType,
   enumType,
+  subscriptionField,
 } from 'nexus'
 import * as CalendarService from '../../services/calendarService.js'
+import * as UserService from '../../services/userService.js'
 import { getUserByUsername } from '../../services/userService.js'
 import { AccessLevel, UserRole } from '@prisma/client'
+
+import { User } from './User.js'
+
+const CALENDAR_CREATED = 'CALENDAR_CREATED'
+const CALENDAR_UPDATED = 'CALENDAR_UPDATED'
+const CALENDAR_DELETED = 'CALENDAR_DELETED'
 
 export const Calendar = objectType({
   name: 'Calendar',
@@ -35,12 +43,9 @@ export const UserCalendar = objectType({
     t.nonNull.int('calendar_id')
     t.nonNull.field('access_level', { type: 'AccessLevel' })
     t.field('user', {
-      type: 'User', // You'll need to define `User` objectType if not already
+      type: 'User',
       resolve: async (parent, _, ctx) => {
-        const user = await ctx.prisma.user.findUnique({
-          where: { id: parent.user_id },
-        })
-        return user
+        return await UserService.getUserById(parent.user_id)
       },
     })
   },
@@ -141,10 +146,15 @@ export const CalendarMutations = extendType({
           })
         )
 
-        return CalendarService.createCalendarWithUsers(
+        const calendar = await CalendarService.createCalendarWithUsers(
           { calendar_name, color },
           resolvedUsers
         )
+        if (!calendar) throw new Error('Failed to create calendar');
+                
+        ctx.pubsub.publish(CALENDAR_CREATED, calendar)
+
+        return calendar
       },
     })
 
@@ -152,7 +162,7 @@ export const CalendarMutations = extendType({
       type: 'Calendar',
       args: {
         id: nonNull(intArg()),
-        calendar_name: nonNull(stringArg()),
+        calendar_name: stringArg(),
         color: stringArg(),
       },
       resolve: async (_, { id, calendar_name, color }, ctx) => {
@@ -168,7 +178,11 @@ export const CalendarMutations = extendType({
 
         if (!isIncluded && !isAdmin) throw new Error('Forbidden')
 
-        return CalendarService.updateCalendar(id, { calendar_name, color })
+        const res = CalendarService.updateCalendar(id, { calendar_name, color })
+
+        ctx.pubsub.publish(CALENDAR_UPDATED, calendar)
+
+        return res
       },
     })
 
@@ -191,8 +205,40 @@ export const CalendarMutations = extendType({
         if (!isIncluded && !isAdmin) throw new Error('Forbidden')
 
         await CalendarService.deleteCalendar(id)
+        ctx.pubsub.publish(CALENDAR_DELETED, calendar)
         return true
       },
     })
+  },
+})
+
+
+export const CalendarCreateSubscription = subscriptionField('calendarCreated', { 
+  type: 'Calendar',
+  subscribe: (_, __, { pubsub }) => {
+    return pubsub.asyncIterableIterator('CALENDAR_CREATED')
+  },
+  resolve: (payload) => {
+    return payload
+  },
+})
+
+export const CalendarUpdateSubscription = subscriptionField('calendarUpdated', {
+  type: 'Calendar',
+  subscribe: (_, __, { pubsub }) => {
+    return pubsub.asyncIterableIterator('CALENDAR_UPDATED')
+  },
+  resolve: (payload) => {
+    return payload
+  },
+})
+
+export const CalendarDeleteSubscription = subscriptionField('calendarDeleted', {
+  type: 'Calendar',
+  subscribe: (_, __, { pubsub }) => {
+    return pubsub.asyncIterableIterator('CALENDAR_DELETED')
+  },
+  resolve: (payload) => {
+    return payload
   },
 })

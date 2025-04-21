@@ -33,10 +33,10 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-app.use('/api/events', eventRoutes)
+app.use('/api/events', verifyToken, eventRoutes)
 app.use('/api/calendars', verifyToken, calendarRoutes)
-app.use('/api/users', userRoutes)
-app.use('/api/categories', categoryRoutes)
+app.use('/api/users', verifyToken, userRoutes)
+app.use('/api/categories', verifyToken, categoryRoutes)
 app.use('/api/auth', authRoutes)
 
 // This `app` is the returned value from `express()`.
