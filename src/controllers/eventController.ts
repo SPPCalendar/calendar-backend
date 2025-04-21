@@ -35,8 +35,26 @@ export const getAllEvents = async (req: Request, res: Response): Promise<void> =
     return
   }
 
+  // If requesting events for a specific calendar, validate that the user has access to that calendar
+  if (calendar_id) {
+    const calendar = await CalendarService.getCalendarById(Number(calendar_id))
+    if (!calendar) {
+      res.status(404).json({ error: 'Calendar not found' })
+      return
+    }
+
+    const isUserIncluded = calendar.users.some(user => user.user_id === Number(req.user?.userId))
+    const isUserAdmin = req.user?.userRole === UserRole.ADMIN
+    if (!isUserIncluded && !isUserAdmin) {
+      res.status(403).json({ error: 'Forbidden' })
+      return
+    }
+  }
+
+  // If not requesting events for a specific calendar, validate that the user is an admin
+  const isAdmin = req.user?.userRole === UserRole.ADMIN
   // Validate that the user is an admin
-  if (req.user?.userRole !== UserRole.ADMIN) {
+  if (!isAdmin && !calendar_id) {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
